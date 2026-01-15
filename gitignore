@@ -1,0 +1,12 @@
+# Python garbage
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# OS garbage
+.DS_Store
+Thumbs.db
+
+# Docker volumes (if mapped locally)
+pgdata/

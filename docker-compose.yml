@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # --- Service 1: Database (PostgreSQL) ---
+  db:
+    image: postgres:15
+    container_name: f1_postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password  # Ensure this matches your local password if needed
+      POSTGRES_DB: formula1
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist data so it survives container restarts
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Service 2: Dashboard App (Streamlit) ---
+  dashboard:
+    build: .
+    container_name: f1_dashboard_container
+    ports:
+      - "8501:8501"
+    depends_on:
+      - db  # Wait for database to start before starting the app
+    volumes:
+      # Map local 'src' folder to container's '/app/src' for live editing
+      - ./src:/app/src
+    environment:
+      # Override DB connection string to use the internal Docker network alias 'db'
+      DATABASE_URL: postgresql://postgres:password@db:5432/formula1
+
+volumes:
+  postgres_data:
