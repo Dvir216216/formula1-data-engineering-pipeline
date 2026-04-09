@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Environments
+.env
+.venv/
+env/
+venv/
+
+# Raw Data
+data/
+*.csv
+
+# uv
+uv.lock #
+
+desktop.ini 
