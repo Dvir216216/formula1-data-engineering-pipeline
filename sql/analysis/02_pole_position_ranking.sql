@@ -1,4 +1,4 @@
--- Top 10 leaders in pole position on every circuit -- 
+-- Top 10 leaders in pole position on every circuit -- 
 
 WITH PolePositionData AS (
 	SELECT 
@@ -12,8 +12,11 @@ WITH PolePositionData AS (
 	JOIN drivers d ON d.driverid = re.driverid
 	WHERE re.grid = 1
 	GROUP BY c.circuitref, d.driverref
-	)
-SELECT *
+)
+SELECT 
+    circuitref,
+    driverref,
+    pole_1_count,
+    rank_in_circuit
 FROM PolePositionData
-WHERE rank_in_circuit <= 3 AND pole_1_count >= 2
-
+WHERE rank_in_circuit <= 3 AND pole_1_count >= 2;

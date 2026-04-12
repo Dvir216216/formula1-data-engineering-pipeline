@@ -24,6 +24,11 @@ SELECT
     d.code AS driver_code,
     d.dob AS driver_dob,
     d.nationality AS driver_nationality,
+
+    -- Constructor Info (התוספת שלנו)
+    con.constructorid,
+    con.name AS constructor_name,
+    con.nationality AS constructor_nationality,
     
     -- Results & Status
     res.resultid,
@@ -40,4 +45,5 @@ FROM races r
 JOIN circuits c ON r.circuitid = c.circuitid
 JOIN results res ON r.raceid = res.raceid
 JOIN drivers d ON res.driverid = d.driverid
-JOIN status s ON res.statusid = s.statusid;
+JOIN status s ON res.statusid = s.statusid
+JOIN constructors con ON res.constructorid = con.constructorid; -- ה-JOIN החדש
