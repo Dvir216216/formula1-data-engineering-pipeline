@@ -35,7 +35,8 @@ pages = {
     "Dashboards": [
         st.Page("pages/01_evolution.py", title="Evolution of Speed", icon="⏱️"),
         st.Page("pages/02_drivers.py", title="Track Mastery", icon="🏆"),
-        st.Page("pages/03_circuits.py", title="Circuit Risk & Stats", icon="🏁"), # הוספנו את העמוד השלישי
+        st.Page("pages/03_circuits.py", title="Circuit Risk & Stats", icon="🏁"), 
+        st.Page("pages/04_optimization.py", title="Performance Metrics", icon="⚡"), # השורה שהוספנו
     ]
 }
 
