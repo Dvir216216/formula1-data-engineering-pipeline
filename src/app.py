@@ -32,11 +32,14 @@ st.session_state['load_data'] = load_data
 
 # --- 4. Navigation (Multi-Page Router) ---
 pages = {
+    "Overview": [
+        st.Page("pages/00_home.py", title="Home", icon="🏠"),
+    ],
     "Dashboards": [
         st.Page("pages/01_evolution.py", title="Evolution of Speed", icon="⏱️"),
         st.Page("pages/02_drivers.py", title="Track Mastery", icon="🏆"),
         st.Page("pages/03_circuits.py", title="Circuit Risk & Stats", icon="🏁"), 
-        st.Page("pages/04_optimization.py", title="Performance Metrics", icon="⚡"), # השורה שהוספנו
+        st.Page("pages/04_optimization.py", title="Performance Metrics", icon="⚡"),
     ]
 }
 

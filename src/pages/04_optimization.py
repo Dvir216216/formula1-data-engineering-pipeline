@@ -72,6 +72,23 @@ try:
     )
     
     st.plotly_chart(fig, use_container_width=True)
+
+    # --- Section 1: Transparency (SQL & Raw Data) ---
+    with st.expander("🔍 View SQL Queries & Raw Benchmark Data"):
+        st.markdown("**The Queries**")
+        st.code("""-- Case 1: Real-Time Join (Baseline CPU Heavy)
+    SELECT * FROM results res 
+    JOIN races r ON res.raceid = r.raceid 
+    JOIN drivers d ON res.driverid = d.driverid 
+    JOIN constructors con ON res.constructorid = con.constructorid
+    JOIN circuits c ON r.circuitid = c.circuitid
+    WHERE d.driverid = 1;
+
+    -- Case 5: Pre-computed Materialized View (Zero Join Overhead)
+    SELECT * FROM mv_race_complete_details WHERE driverid = 1;""", language="sql")
+        
+        st.markdown("**Raw Benchmark Results**")
+        st.dataframe(df_mv, use_container_width=True)
     
 except FileNotFoundError:
     st.error("🚨 Error: The benchmark CSV file was not found. Please check the file path.")
@@ -141,6 +158,7 @@ try:
         barmode='group',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
+
     
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -149,6 +167,15 @@ try:
     💡 **Architectural Insight:** Notice how the **Query Cost** stays identical between the Standard Index and the Clustered Index (4,858.96). 
     This occurs because PostgreSQL reads the exact same number of data pages in both scenarios. The 83% speed upgrade in the Clustered Index comes entirely from transforming **Random I/O** (jumping around the physical disk) into **Sequential I/O** (reading contiguous data blocks).
     """)
+
+    # --- Section 2: Transparency (SQL & Raw Data) ---
+    with st.expander("🔍 View SQL Queries & Raw Benchmark Data"):
+        st.markdown("**The Query (Same query, different physical disk layout)**")
+        st.code("""-- Finding all lap times for Driver 4
+        SELECT * FROM lap_times WHERE driverid = 4;""", language="sql")
+        st.markdown("**Raw Benchmark Results**")
+        st.dataframe(df_lap, use_container_width=True)
+
 
 except FileNotFoundError:
     st.error("🚨 Error: The benchmark_indexes.csv file was not found in data/benchmarks/.")
