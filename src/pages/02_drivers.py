@@ -22,7 +22,6 @@ st.divider()
 st.header("1. Driver Success by Track Type")
 st.markdown("Classifying circuits based on average speed to identify where specific drivers excel.")
 
-# Defined the query using 'driverref' instead of the non-existent 'driver_name'
 track_type_query = """
 WITH track_stats AS (
     SELECT 
@@ -68,10 +67,32 @@ if not df_tracks.empty:
     )
     st.plotly_chart(fig_tracks, use_container_width=True)
     
-    # SQL Viewer
-    with st.expander("🔍 View the SQL Engine (Track Classification)"):
-        st.markdown("This query calculates the average speed per track to classify it, then joins the results to find the most successful drivers per category.")
-        st.code(track_type_query, language="sql")
+    # Deep Dive & SQL Viewer
+    with st.expander("📊 Analytical Deep Dive & Engineering Notes"):
+        tab1, tab2 = st.tabs(["💡 Data Insights & Research", "⚙️ SQL & Optimization"])
+        
+        with tab1:
+            st.markdown("""
+            **Data Insights & Conclusions:**
+            * **Aerodynamics vs. Engine:** 'Technical' circuits (like Monaco or Singapore) reward high downforce and driver precision, while 'High Speed' circuits (Monza, Spa) favor raw engine power and low-drag setups.
+            * **Driver Adaptability:** Drivers who show high win counts across *all three* track categories (Balanced, High Speed, Technical) demonstrate generational adaptability, proving their success is not purely reliant on a specific car characteristic.
+
+            **Visualization Strategy:**
+            * A **Grouped Bar Chart** effectively displays multi-dimensional categorical data. Grouping by 'Track Type' allows us to immediately spot which drivers dominate specific aerodynamic conditions compared to their peers.
+
+            **Future Research Points:**
+            * **Car vs. Driver Correlation:** Introduce constructor data to determine if a driver's dominance on 'High Speed' tracks was heavily inflated by driving a car with a superior engine (e.g., Mercedes PU from 2014-2016).
+            * **Weather Adjustments:** Rain acts as a great equalizer. Analyzing wins in wet conditions on 'High Speed' tracks could isolate driver skill from pure machine performance.
+            """)
+            
+        with tab2:
+            st.markdown("**The Engine Under the Hood:**")
+            st.code(track_type_query, language="sql")
+            st.markdown("""
+            **Query Optimization Insights:**
+            * *Anti-Pattern Identification:* The query joins `track_types t` and `mv_race_complete_details v` on `circuit_name`. Joining on string (text) columns is computationally expensive and memory-inefficient compared to integer joins.
+            * *Data Engineering Fix:* The track classification (`CASE` statement) evaluates per query execution. The ETL pipeline should pre-calculate the `avg_speed_kph` and assign a static `circuit_type_id` directly in the dimensional `circuits` table. The join should then strictly utilize integer keys (`circuitid`).
+            """)
 else:
     st.warning("No data available for Track Classification.")
 
@@ -81,7 +102,6 @@ st.divider()
 st.header("2. The Quali Masters (Pole Positions)")
 st.markdown("Identifying drivers who dominated Saturday qualifying sessions across different circuits.")
 
-# Refactored to use 'driverref'
 pole_query = """
 WITH PolePositionData AS (
     SELECT 
@@ -118,9 +138,30 @@ if not df_pole.empty:
     fig_pole.update_layout(xaxis_tickangle=-45)
     st.plotly_chart(fig_pole, use_container_width=True)
 
-    # SQL Viewer
-    with st.expander("🔍 View the SQL Engine (Window Functions)"):
-        st.markdown("This query uses `DENSE_RANK() OVER (PARTITION BY...)` to find the top qualifier for each distinct circuit.")
-        st.code(pole_query, language="sql")
+    # Deep Dive & SQL Viewer
+    with st.expander("📊 Analytical Deep Dive & Engineering Notes"):
+        tab1, tab2 = st.tabs(["💡 Data Insights & Research", "⚙️ SQL & Optimization"])
+        
+        with tab1:
+            st.markdown("""
+            **Data Insights & Conclusions:**
+            * **The One-Lap Pace Makers:** Qualifying (Saturday) requires extracting the absolute maximum grip from the tires over a single lap, which requires a completely different setup and driving style compared to race pace (Sunday).
+            * **Circuit Specialists:** Seeing a driver hold the absolute record for pole positions at specific historic circuits highlights extreme synergy between a driver's specific driving style and the track's layout.
+
+            **Visualization Strategy:**
+            * A **Bubble Chart (Scatter with Size)** draws immediate attention to magnitude. The size of the bubble intuitively represents the scale of dominance (`pole_count`), allowing viewers to quickly scan for the highest all-time records across the grid.
+
+            **Future Research Points:**
+            * **Pole-to-Win Conversion Rate:** Does starting 1st actually guarantee a win? Analyzing the conversion rate of Pole Positions to Race Wins per circuit would reveal which tracks make overtaking nearly impossible (e.g., Monaco) versus tracks where slipstreaming favors the car starting 2nd (e.g., Mexico).
+            """)
+            
+        with tab2:
+            st.markdown("**The Engine Under the Hood:**")
+            st.code(pole_query, language="sql")
+            st.markdown("""
+            **Query Optimization Insights:**
+            * *Window Function Cost:* `DENSE_RANK() OVER (PARTITION BY...)` is a powerful analytical tool, but it forces the PostgreSQL engine to perform internal sorting operations which can be CPU-bound on large datasets.
+            * *Materialization Strategy:* Since historical pole positions rarely change (only once a year per track), computing this ranking dynamically on every page load is inefficient. This result set is a prime candidate for a nightly aggregated table or a specialized Materialized View (e.g., `mv_driver_circuit_records`).
+            """)
 else:
     st.warning("No data available for Pole Positions.")

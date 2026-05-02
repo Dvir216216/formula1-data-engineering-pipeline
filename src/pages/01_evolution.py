@@ -56,10 +56,32 @@ if not df_monaco.empty:
                              xaxis_title="Year", yaxis_title="Time in Seconds")
     st.plotly_chart(fig_monaco, use_container_width=True)
     
-    # SQL Viewer
-    with st.expander("🔍 View the SQL Engine (Lap Time Evolution)"):
-        st.markdown("This query extracts the fastest single lap and the average field lap time per year, converting PostgreSQL `INTERVAL` types into seconds (`EPOCH`) for accurate plotting.")
-        st.code(monaco_query, language="sql")
+    # Deep Dive & SQL Viewer
+    with st.expander("📊 Analytical Deep Dive & Engineering Notes"):
+        tab1, tab2 = st.tabs(["💡 Data Insights & Research", "⚙️ SQL & Optimization"])
+        
+        with tab1:
+            st.markdown("""
+            **Data Insights & Conclusions:**
+            * **Regulation Over Engineering:** The general trend shows car speed is largely dictated by FIA regulations. The massive drop in lap times around 2017 aligns with the introduction of wider cars and significantly higher downforce rules.
+            * **Spikes in the Data:** Occasional severe spikes (slower times) often correlate with wet-weather races, pulling the field average significantly higher.
+
+            **Visualization Strategy:**
+            * A dual-trace **Line Chart** is optimal for time-series data. Plotting both the absolute limit (Best Lap) and the field average demonstrates not just the peak engineering capability, but the overall competitiveness of the grid.
+
+            **Future Research Points:**
+            * **Weather API Integration:** Filter out wet sessions to compare purely dry pace.
+            * **Regulation Mapping:** Overlay vertical lines on the chart representing major rule changes (e.g., 2014 V6 Hybrid, 2022 Ground Effect) to measure the immediate impact of regulatory shifts.
+            """)
+            
+        with tab2:
+            st.markdown("**The Engine Under the Hood:**")
+            st.code(monaco_query, language="sql")
+            st.markdown("""
+            **Query Optimization Insights:**
+            * By utilizing the `mv_race_complete_details` Materialized View, we bypassed the heavy joins required to link circuits, races, and results.
+            * *Refactoring Opportunity:* Casting `fastestlaptime` to `INTERVAL` on the fly is CPU-intensive. A better architectural approach is to parse string lap times into integer milliseconds during the Python ETL pipeline before pushing to PostgreSQL.
+            """)
 else:
     st.warning("No data available for Monaco Lap Times.")
 
@@ -91,9 +113,31 @@ if not df_cons.empty:
     fig_cons.update_layout(yaxis={'categoryorder':'total descending'})
     st.plotly_chart(fig_cons, use_container_width=True)
     
-    # SQL Viewer
-    with st.expander("🔍 View the SQL Engine (Constructor Pace)"):
-        st.markdown("This query calculates the average lap pace across all tracks for each constructor, limiting the results to the top 10 fastest teams.")
-        st.code(constructor_query, language="sql")
+    # Deep Dive & SQL Viewer
+    with st.expander("📊 Analytical Deep Dive & Engineering Notes"):
+        tab1, tab2 = st.tabs(["💡 Data Insights & Research", "⚙️ SQL & Optimization"])
+        
+        with tab1:
+            st.markdown("""
+            **Data Insights & Conclusions:**
+            * **The Early Adopter Advantage:** Teams that nailed the complex V6 Turbo-Hybrid regulations early (e.g., Mercedes) established a multi-year dominance. 
+            * **Pace Discrepancy:** The gap between the top tier and the midfield becomes glaringly obvious when aggregated over multiple seasons, highlighting the correlation between team budgets and engineering output.
+
+            **Visualization Strategy:**
+            * A **Horizontal Bar Chart** provides immediate readability for categorical data (Teams). Sorting descending forces the fastest teams to the top. The `Reds_r` color scale subconsciously associates lower (faster) times with high performance.
+
+            **Future Research Points:**
+            * **Consistency vs. Peak Pace:** Calculate the Standard Deviation (`STDDEV`) of lap times. A team might have a fast average but high volatility due to unreliability.
+            * **Time-Series Breakdown:** Track how the gap between the #1 constructor and the rest of the field has narrowed or widened year over year.
+            """)
+            
+        with tab2:
+            st.markdown("**The Engine Under the Hood:**")
+            st.code(constructor_query, language="sql")
+            st.markdown("""
+            **Query Optimization Insights:**
+            * *The String Manipulation Bottleneck:* The operation `CAST('00:' || fastestlaptime AS INTERVAL)` forces the PostgreSQL engine to do string concatenation and data type casting for every single row matching the `WHERE` clause. 
+            * *Data Engineering Fix:* This violates the principle of "Compute Once, Read Many". The ETL pipeline should be updated to compute `lap_time_ms` as a native integer column directly in the `results` table to drastically reduce query execution cost.
+            """)
 else:
     st.warning("No data available for Constructor analysis.")

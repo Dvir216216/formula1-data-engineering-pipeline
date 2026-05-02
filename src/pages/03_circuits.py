@@ -52,10 +52,31 @@ if not df_danger.empty:
     fig_danger.update_layout(yaxis={'categoryorder':'total ascending'})
     st.plotly_chart(fig_danger, use_container_width=True)
     
-    # SQL Viewer
-    with st.expander("🔍 View the SQL Engine (Accident Filtering)"):
-        st.markdown("This query filters the `status_text` for crash-related keywords to aggregate total incidents per track.")
-        st.code(danger_query, language="sql")
+    # Deep Dive & SQL Viewer
+    with st.expander("📊 Analytical Deep Dive & Engineering Notes"):
+        tab1, tab2 = st.tabs(["💡 Data Insights & Research", "⚙️ SQL & Optimization"])
+        
+        with tab1:
+            st.markdown("""
+            **Data Insights & Conclusions:**
+            * **Wall Proximity is Punishing:** Street circuits (like Monaco or Baku) and old-school tracks (like Suzuka) dominate this list. Unlike modern circuits with vast asphalt run-off areas that forgive lock-ups, making a mistake on these tracks means immediate contact with a wall.
+            * **The "First Lap" Factor:** Circuits with tight, heavy-braking first corners (like Monza's Turn 1) naturally generate higher collision rates purely due to the funneling effect on the opening lap.
+
+            **Visualization Strategy:**
+            * A **Horizontal Bar Chart** is standard practice for categorical data with long text labels (Circuit Names), ensuring no text overlap. The `Reds` color scale emphasizes severity.
+
+            **Future Research Points:**
+            * **Weather Correlation:** How many of these crashes occurred during wet conditions? Cross-referencing this with weather data could separate tracks that are inherently dangerous from tracks that just had a few chaotic, rainy weekends.
+            """)
+            
+        with tab2:
+            st.markdown("**The Engine Under the Hood:**")
+            st.code(danger_query, language="sql")
+            st.markdown("""
+            **Query Optimization Insights:**
+            * *Anti-Pattern Identification:* Hardcoding status strings (`IN ('Accident', 'Collision'...)`) inside the `WHERE` clause is a brittle practice. If the raw data introduces a new status like 'Crash', the query silently drops data.
+            * *Data Architecture Fix:* Instead of filtering by text, the database should have a `dim_status` table where each `status_id` is categorized into broad buckets (e.g., `status_category = 'Crash'`). The query should then join and filter by the category, ensuring the logic remains robust and scalable.
+            """)
 else:
     st.warning("No data available for Danger Zone.")
 
@@ -107,9 +128,31 @@ if not df_reliability.empty:
     fig_reliability.update_layout(xaxis_tickangle=-45)
     st.plotly_chart(fig_reliability, use_container_width=True)
     
-    # SQL Viewer
-    with st.expander("🔍 View the SQL Engine (Conditional Aggregation)"):
-        st.markdown("This query uses `SUM(CASE WHEN...)` to pivot the reasons for Did Not Finish (DNF) into distinct columns for comparison.")
-        st.code(reliability_query, language="sql")
+    # Deep Dive & SQL Viewer
+    with st.expander("📊 Analytical Deep Dive & Engineering Notes"):
+        tab1, tab2 = st.tabs(["💡 Data Insights & Research", "⚙️ SQL & Optimization"])
+        
+        with tab1:
+            st.markdown("""
+            **Data Insights & Conclusions:**
+            * **Car Breakers:** Some tracks are notorious for mechanical stress. For example, Monza requires the engine to be at 100% full throttle for most of the lap, leading to engine blowouts. Singapore's extreme heat and constant shifting destroy gearboxes and hydraulics.
+            * **The Reliability Evolution:** If we filter this chart to only show post-2014 data, mechanical failures practically disappear compared to the early 2000s, showcasing the incredible leap in modern hybrid engine reliability.
+
+            **Visualization Strategy:**
+            * A **Grouped Bar Chart** perfectly contrasts the two metrics. The visual distinction allows us to quickly spot "anomalies"—tracks where mechanical failures actually outnumber driver errors.
+
+            **Future Research Points:**
+            * **Correlating Heat with Failures:** Cross-reference mechanical failures with historical ambient and track temperature data to prove the hypothesis that hotter races cause disproportionately more engine and hydraulic failures.
+            """)
+            
+        with tab2:
+            st.markdown("**The Engine Under the Hood:**")
+            st.code(reliability_query, language="sql")
+            st.markdown("""
+            **Query Optimization Insights:**
+            * *Data Transformation:* The SQL query utilizes **Conditional Aggregation** (`SUM(CASE WHEN...)`) to pivot row-level status data into distinct columns. We then use Pandas `pd.melt()` in Python to unpivot the data back into a long format required by Plotly for grouped bars.
+            * *Compute Cost:* Executing multiple `IN (...)` string matching operations inside aggregate functions is CPU-heavy over millions of rows. 
+            * *Data Engineering Fix:* The ETL pipeline should calculate boolean flags (e.g., `is_driver_error_dnf` = 1 or 0, `is_mechanical_dnf` = 1 or 0) directly during insertion. The query would then simply be `SUM(is_driver_error_dnf)`, turning a complex text-search into a lightning-fast integer summation.
+            """)
 else:
     st.warning("No data available for Reliability Analysis.")
