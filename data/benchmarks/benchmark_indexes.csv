@@ -1,0 +1,6 @@
+id,query_name,scan_type,execution_time_ms,cost_estimate,test_date
+1,Lap Times Search,1. No Index (Seq Scan),39.456,10605.23,21:06.5
+2,Lap Times Search,2. Standard Index,18.806,4858.96,21:06.5
+3,Lap Times Search,3. Clustered Index,3.091,4858.96,21:06.5
+4,Complex Join (Driver + Year),4. Complex Join (No Index),41.043,8468.04,25:41.4
+5,Complex Join (Driver + Year),5. Complex Join (Fully Optimized),4.727,4968.73,25:41.4
